@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using WhiteLagoon.Application.Common.Interfaces;
+using WhiteLagoon.Application.Services.Interface;
 using WhiteLagoon.Domain.Entities;
 using WhiteLagoon.Web.ViewModels;
 
@@ -8,16 +9,18 @@ namespace WhiteLagoon.Web.Controllers
 {
     public class AmenityController : Controller
     {
-        private readonly IUnitOfWork _unitOfWork;
+        private readonly IAmenityService _amenityService;
+        private readonly IVillaService _villaService;
 
-        public AmenityController(IUnitOfWork unitOfWork)
+        public AmenityController(IAmenityService amenityService, IVillaService villaService)
         {
-            _unitOfWork = unitOfWork;
+            _amenityService = amenityService;
+            _villaService = villaService;
         }
         public IActionResult Index()
         {
-            var Amenities = _unitOfWork.Amenity.GetAll(includeProperties: "Villa");
-            return View(Amenities);
+            var amenities = _amenityService.GetAllAmenities();
+            return View(amenities);
         }
 
         public IActionResult Create()
@@ -25,50 +28,40 @@ namespace WhiteLagoon.Web.Controllers
 
             AmenityVM amenityVM = new()
             {
-                VillaList = _unitOfWork.Villa.GetAll().Select(u => new SelectListItem  //SelectListItem used for Select list type, as it is selecting the list into select and it uses the Microsoft.aspnetcore.mvc.rendering
+                VillaList = _villaService.GetAllVillas().Select(u => new SelectListItem
                 {
-
                     Text = u.Name,
                     Value = u.Id.ToString()
                 })
-
             };
-
-
-
             return View(amenityVM);
+                        
 
         }
         [HttpPost]
         public IActionResult Create(AmenityVM obj)
         {
             ModelState.Remove("Amenity.Villa"); //Removing ModelState Validation for villa
-            
+
 
             if (ModelState.IsValid)
             {
-                _unitOfWork.Amenity.Add(obj.Amenity);
-                _unitOfWork.Save();
-                TempData["success"] = "The Amenity has been created successfully.";
-                return RedirectToAction("Index", "Amenity"); //explicitly we write the Villa controller or we writre simply "Index"
-
+                _amenityService.CreateAmenity(obj.Amenity);
+                TempData["success"] = "The amenity has been created successfully.";
+                return RedirectToAction(nameof(Index));
             }
-            
-            
 
-            
+
+
+
 
             TempData["error"] = "The Amenity cannot be Created.";
 
-            obj.VillaList = _unitOfWork.Villa.GetAll().Select(u => new SelectListItem  //SelectListItem used for Select list type, as it is selecting the list into select and it uses the Microsoft.aspnetcore.mvc.rendering
+            obj.VillaList = _villaService.GetAllVillas().Select(u => new SelectListItem
             {
-
                 Text = u.Name,
                 Value = u.Id.ToString()
             });
-
-
-
             return View(obj);
 
 
@@ -79,30 +72,18 @@ namespace WhiteLagoon.Web.Controllers
 
             AmenityVM amenityVM = new()
             {
-                VillaList = _unitOfWork.Villa.GetAll().Select(u => new SelectListItem  //SelectListItem used for Select list type, as it is selecting the list into select and it uses the Microsoft.aspnetcore.mvc.rendering
+                VillaList = _villaService.GetAllVillas().Select(u => new SelectListItem
                 {
-
                     Text = u.Name,
                     Value = u.Id.ToString()
                 }),
-                Amenity = _unitOfWork.Amenity.Get(u => u.Id == AmenityId)
-
+                Amenity = _amenityService.GetAmenityById(AmenityId)
             };
-
-
-            
-
             if (amenityVM.Amenity == null)
             {
                 return RedirectToAction("Error", "Home");
-
             }
-
-
-            else
-            {
-                return View(amenityVM);
-            }
+            return View(amenityVM);
 
 
         }
@@ -115,23 +96,16 @@ namespace WhiteLagoon.Web.Controllers
 
             if (ModelState.IsValid)
             {
-                _unitOfWork.Amenity.Update(obj.Amenity);
-                _unitOfWork.Save();
-                TempData["success"] = "The Amenity has been updated successfully.";
-                return RedirectToAction("Index", "Amenity"); //explicitly we write the Villa controller or we writre simply "Index"
-
+                _amenityService.UpdateAmenity(obj.Amenity);
+                TempData["success"] = "The amenity has been updated successfully.";
+                return RedirectToAction(nameof(Index));
             }
 
-
-            obj.VillaList = _unitOfWork.Villa.GetAll().Select(u => new SelectListItem  //SelectListItem used for Select list type, as it is selecting the list into select and it uses the Microsoft.aspnetcore.mvc.rendering
+            obj.VillaList = _villaService.GetAllVillas().Select(u => new SelectListItem
             {
-
                 Text = u.Name,
                 Value = u.Id.ToString()
             });
-
-
-
             return View(obj);
 
 
@@ -142,48 +116,33 @@ namespace WhiteLagoon.Web.Controllers
 
             AmenityVM amenityVM = new()
             {
-                VillaList = _unitOfWork.Villa.GetAll().Select(u => new SelectListItem  //SelectListItem used for Select list type, as it is selecting the list into select and it uses the Microsoft.aspnetcore.mvc.rendering
+                VillaList = _villaService.GetAllVillas().Select(u => new SelectListItem
                 {
-
                     Text = u.Name,
                     Value = u.Id.ToString()
                 }),
-                Amenity = _unitOfWork.Amenity.Get(u => u.Id == AmenityId)
-
+                Amenity = _amenityService.GetAmenityById(AmenityId)
             };
-
             if (amenityVM.Amenity == null)
             {
                 return RedirectToAction("Error", "Home");
-
             }
-
-
-            else
-            {
-                return View(amenityVM);
-            }
+            return View(amenityVM);
 
 
         }
         [HttpPost]
         public IActionResult Delete(AmenityVM obj)
         {
-            Amenity? objFromDb = _unitOfWork.Amenity.Get(u => u.Id == obj.Amenity.Id);
-            if (objFromDb != null)
+            Amenity? objFromDb = _amenityService.GetAmenityById(obj.Amenity.Id);
+            if (objFromDb is not null)
             {
-                _unitOfWork.Amenity.Remove(objFromDb);
-                _unitOfWork.Save();
-                TempData["success"] = "The Amenity has been deleted successfully.";
-                return RedirectToAction("Index"); //explicitly we write the Villa controller or we writre simply "Index"
-
+                _amenityService.DeleteAmenity(objFromDb.Id);
+                TempData["success"] = "The amenity has been deleted successfully.";
+                return RedirectToAction(nameof(Index));
             }
-            else
-            {
-                TempData["error"] = "The Amenity could not be deleted.";
-                return View();
-
-            }
+            TempData["error"] = "The amenity could not be deleted.";
+            return View();
         }
 
     }
