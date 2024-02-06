@@ -29,12 +29,12 @@ namespace WhiteLagoon.Application.Services.Implementation
             if (villa.Image != null)
             {
                 string fileName = Guid.NewGuid().ToString() + Path.GetExtension(villa.Image.FileName);
-                string imagePath = Path.Combine(_hostEnvironment.ContentRootPath, @"images\VillaImage");
+                string imagePath = Path.Combine(_hostEnvironment.ContentRootPath, @"wwwroot\images\VillaImage");
 
                 using var fileStream = new FileStream(Path.Combine(imagePath, fileName), FileMode.Create);
                 villa.Image.CopyTo(fileStream);
 
-                villa.ImageUrl = @"\images\VillaImage\" + fileName;
+                villa.ImageUrl = Path.Combine("images", "VillaImage", fileName).Replace("\\", "/");
             }
             else
             {
@@ -90,7 +90,7 @@ namespace WhiteLagoon.Application.Services.Implementation
             if (villa.Image != null)
             {
                 string fileName = Guid.NewGuid().ToString() + Path.GetExtension(villa.Image.FileName);
-                string imagePath = Path.Combine(_hostEnvironment.ContentRootPath, @"images\VillaImage");
+                string imagePath = Path.Combine(_hostEnvironment.ContentRootPath, @"wwwroot\images\VillaImage");
 
                 if (!string.IsNullOrEmpty(villa.ImageUrl))
                 {
@@ -104,8 +104,8 @@ namespace WhiteLagoon.Application.Services.Implementation
 
                 using var fileStream = new FileStream(Path.Combine(imagePath, fileName), FileMode.Create);
                 villa.Image.CopyTo(fileStream);
-
-                villa.ImageUrl = @"\images\VillaImage\" + fileName;
+                villa.ImageUrl = Path.Combine("images", "VillaImage", fileName).Replace("\\", "/");
+                
             }
 
             _unitOfWork.Villa.Update(villa);
