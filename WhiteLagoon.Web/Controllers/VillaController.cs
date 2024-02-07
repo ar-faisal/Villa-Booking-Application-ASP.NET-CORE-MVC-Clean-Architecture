@@ -3,9 +3,12 @@ using WhiteLagoon.Infrastructure;
 using WhiteLagoon.Domain.Entities;
 using WhiteLagoon.Application.Common.Interfaces;
 using WhiteLagoon.Application.Services.Interface;
+using Microsoft.AspNetCore.Authorization;
+using WhiteLagoon.Application.Common.Utility;
 
 namespace WhiteLagoon.Web.Controllers
 {
+    [Authorize(Roles = SD.Role_Admin)] //only admin is allowed
     public class VillaController : Controller
     {
         private readonly IVillaService _villaService;

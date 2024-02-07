@@ -6,9 +6,11 @@ using WhiteLagoon.Web.ViewModels;
 using Microsoft.EntityFrameworkCore;
 using WhiteLagoon.Application.Common.Interfaces;
 using WhiteLagoon.Application.Services.Interface;
+using Microsoft.AspNetCore.Authorization;
 
 namespace WhiteLagoon.Web.Controllers
 {
+    [Authorize]
     public class VillaNumberController : Controller
     {
 
